@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Electronic - Chat Support</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Chat Widget */
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: rgba(255, 165, 0, 0.9);
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            color: #000;
+            font-size: 1.1rem;
+        }
+
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: #000;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background: rgba(255, 165, 0, 0.2);
+            color: #fff;
+            margin-right: auto;
+        }
+
+        .user-message {
+            background: rgba(255, 165, 0, 0.4);
+            color: #fff;
+            margin-left: auto;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            padding: 10px 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-reply {
+            background: rgba(255, 165, 0, 0.2);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-reply:hover {
+            background: rgba(255, 165, 0, 0.4);
+        }
+
+        /* Chat Input */
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 165, 0, 0.2);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 20px;
+            background: rgba(30, 30, 30, 0.9);
+            color: #fff;
+        }
+
+        .chat-input button {
+            background: rgba(255, 165, 0, 0.9);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: rgba(255, 165, 0, 1);
+        }
+
+        /* Scrollbar Styling */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(30, 30, 30, 0.9);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(255, 165, 0, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-widget">
+        <div class="chat-header">
+            <h3>Alpha Electronic Support</h3>
+            <button class="minimize-btn">─</button>
+        </div>
+        <div class="chat-messages">
+            <!-- Messages will be added here -->
+        </div>
+        <div class="quick-replies">
+            <!-- Quick replies will be added here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Type your message...">
+            <button>Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.querySelector('.chat-messages');
+        const chatInput = document.querySelector('.chat-input input');
+        const sendButton = document.querySelector('.chat-input button');
+        const quickRepliesContainer = document.querySelector('.quick-replies');
+        const minimizeBtn = document.querySelector('.minimize-btn');
+
+        // Chat responses
+        const responses = {
+            greeting: "Hello! Welcome to Alpha Electronic. How can I help you today?",
+            services: "We offer the following services:\n- Electronic Solar System Installation\n- CCTV System Installation\n- House Wiring",
+            contact: "You can reach us at:\nName: R.D S S Ranasingha\nAddress: Rantetikanda, Panagamuwa, Kurunegala\nPhone: 072-3283588",
+            solar: "Our solar installation service includes:\n- Professional consultation\n- High-quality panels\n- Expert installation\n- Maintenance support",
+            cctv: "Our CCTV services include:\n- Security camera installation\n- Smart monitoring setup\n- Remote access configuration\n- 24/7 recording solutions",
+            wiring: "Our house wiring services include:\n- Complete electrical setup\n- Safety compliance\n- Modern wiring solutions\n- Maintenance support"
+        };
+
+        // Quick reply options
+        const quickReplies = [
+            "Services",
+            "Contact Info",
+            "Solar Installation",
+            "CCTV Systems",
+            "House Wiring"
+        ];
+
+        // Initialize chat
+        function initChat() {
+            addMessage(responses.greeting, 'bot');
+            updateQuickReplies();
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const message = document.createElement('div');
+            message.classList.add('message', `${sender}-message`);
+            message.textContent = text;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Update quick replies
+        function updateQuickReplies() {
+            quickRepliesContainer.innerHTML = '';
+            quickReplies.forEach(reply => {
+                const button = document.createElement('button');
+                button.classList.add('quick-reply');
+                button.textContent = reply;
+                button.onclick = () => handleUserInput(reply);
+                quickRepliesContainer.appendChild(button);
+            });
+        }
+
+        // Handle user input
+        function handleUserInput(text) {
+            addMessage(text, 'user');
+            
+            let response;
+            const lowerText = text.toLowerCase();
+            
+            if (lowerText.includes('services')) {
+                response = responses.services;
+            } else if (lowerText.includes('contact')) {
+                response = responses.contact;
+            } else if (lowerText.includes('solar')) {
+                response = responses.solar;
+            } else if (lowerText.includes('cctv')) {
+                response = responses.cctv;
+            } else if (lowerText.includes('wiring')) {
+                response = responses.wiring;
+            } else {
+                response = "I'm not sure about that. Would you like to know about our services or contact information?";
+            }
+            
+            setTimeout(() => addMessage(response, 'bot'), 500);
+        }
+
+        // Event listeners
+        sendButton.onclick = () => {
+            if (chatInput.value.trim()) {
+                handleUserInput(chatInput.value);
+                chatInput.value = '';
+            }
+        };
+
+        chatInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && chatInput.value.trim()) {
+                handleUserInput(chatInput.value);
+                chatInput.value = '';
+            }
+        };
+
+        minimizeBtn.onclick = () => {
+            const widget = document.querySelector('.chat-widget');
+            const messages = document.querySelector('.chat-messages');
+            const quickReplies = document.querySelector('.quick-replies');
+            const input = document.querySelector('.chat-input');
+            
+            if (messages.style.display === 'none') {
+                messages.style.display = 'block';
+                quickReplies.style.display = 'flex';
+                input.style.display = 'flex';
+                minimizeBtn.textContent = '─';
+            } else {
+                messages.style.display = 'none';
+                quickReplies.style.display = 'none';
+                input.style.display = 'none';
+                minimizeBtn.textContent = '□';
+            }
+        };
+
+        // Initialize chat on load
+        initChat();
+    </script>
+</body>
+</html>
